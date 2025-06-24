@@ -154,3 +154,130 @@ curl http://127.0.0.1:8080
 
 **Проблема**: После изменения порта nginx на 81 внутри контейнера, внешний порт 8080 продолжает перенаправлять на порт 80 контейнера, который больше не используется.
 
+
+### Удаление контейнера
+
+```bash
+docker rm -f custom-nginx-t2
+```
+
+## Задача 4
+
+### Запуск контейнеров
+
+```bash
+docker run -d -v $(pwd):/data --name centos-container centos tail -f /dev/null
+docker run -d -v $(pwd):/data --name debian-container debian tail -f /dev/null
+```
+
+### Создание файлов
+
+```bash
+docker exec centos-container bash -c "echo 'Hello from CentOS' > /data/centos-file.txt"
+touch host-file.txt
+docker exec debian-container ls -la /data
+docker exec debian-container cat /data/centos-file.txt
+```
+
+![Скриншот выполнения команд](screenshots/task4.png)
+
+## Задача 5
+
+### Создание директории и файлов
+
+```bash
+mkdir -p /tmp/netology/docker/task5
+cd /tmp/netology/docker/task5
+```
+
+`compose.yaml`:
+```yaml
+version: "3"
+services:
+  portainer:
+    network_mode: host
+    image: portainer/portainer-ce:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+```
+
+`docker-compose.yaml`:
+```yaml
+version: "3"
+services:
+  registry:
+    image: registry:2
+    ports:
+      - "5000:5000"
+```
+
+### Запуск compose
+
+```bash
+docker compose up -d
+```
+
+Был запущен файл `compose.yaml`, так как он имеет более высокий приоритет согласно документации Docker.
+
+### Редактирование compose.yaml для включения обоих файлов
+
+```yaml
+version: "3"
+services:
+  portainer:
+    network_mode: host
+    image: portainer/portainer-ce:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+  registry:
+    image: registry:2
+    ports:
+      - "5000:5000"
+```
+
+### Загрузка образа в локальное registry
+
+```bash
+docker tag custom-nginx:1.0.0 127.0.0.1:5000/custom-nginx
+docker push 127.0.0.1:5000/custom-nginx
+```
+
+### Настройка Portainer
+
+1. Открываем `https://127.0.0.1:9000`
+2. Создаем администратора
+3. Выбираем локальное окружение
+
+### Деплой стека в Portainer
+
+В Web Editor вводим:
+
+```yaml
+version: '3'
+services:
+  nginx:
+    image: 127.0.0.1:5000/custom-nginx
+    ports:
+      - "9090:80"
+```
+
+### Скриншот конфигурации контейнера
+
+![Скриншот конфигурации](screenshots/task5_inspect.png)
+
+### Удаление манифеста и повторный запуск
+
+```bash
+rm compose.yaml
+docker compose up -d
+```
+
+Получаем предупреждение о том, что используется только один файл композа. Docker предлагает использовать `docker-compose -f docker-compose.yaml up -d`.
+
+### Остановка проекта
+
+```bash
+docker compose down
+```
+
+![Скриншот выполнения команд](screenshots/task5.png)
