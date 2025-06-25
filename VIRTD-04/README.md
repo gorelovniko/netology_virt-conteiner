@@ -29,24 +29,6 @@ sudo apt-get update
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 ```
 
-<!-- ### Настройка Docker Hub Mirror
-
-Создаем файл `/etc/docker/daemon.json`:
-
-```bash
-sudo tee /etc/docker/daemon.json <<EOF
-{
-  "registry-mirrors": [
-    "https://mirror.gcr.io",
-    "https://daocloud.io",
-    "https://c.163.com/",
-    "https://registry.docker-cn.com"
-  ]
-}
-EOF
-sudo systemctl restart docker
-``` -->
-
 ### Создание Dockerfile и сборка образа
 
 Создаем `Dockerfile`:
@@ -85,6 +67,8 @@ docker push <username>/custom-nginx:1.0.0
 
 Ссылка на репозиторий: [custom-nginx](https://hub.docker.com/repository/docker/nikogorelov/custom-nginx/general)
 
+---
+
 ## Задача 2
 
 ### Запуск контейнера
@@ -107,6 +91,8 @@ curl http://127.0.0.1:8080
 ```
 
 ![](img/virtd-04-task-02.png)
+
+---
 
 ## Задача 3
 
@@ -155,19 +141,48 @@ curl http://127.0.0.1:8080
 **Проблема**: После изменения порта nginx на 81 внутри контейнера, внешний порт 8080 продолжает перенаправлять на порт 80 контейнера, который больше не используется.
 
 
+### Решение проблемы основываясь на источнике
+
+```bash
+# 1. Создаём новый образ из контейнера
+docker commit custom-nginx-t2 custom-nginx-new
+
+# 2. Запускаем новый контейнер с правильными портами
+docker run -d --name fixed-nginx -p 8080:81 custom-nginx-new
+
+# 3. Проверяем
+curl http://localhost:8080
+```
+
+1. Фиксирует текущее состояние контейнера (файлы, настройки, изменения)
+
+2. Создаёт новый образ с именем custom-nginx-new
+
+3. Не затрагивает исходный контейнер (custom-nginx-t2 остаётся без изменений)
+
+
 ### Удаление контейнера
 
 ```bash
 docker rm -f custom-nginx-t2
 ```
 
+![3.1](img/virtd-04-task-03.1.png)
+![3.2](img/virtd-04-task-03.2.png)
+![3.3](img/virtd-04-task-03.3.png)
+![3.4](img/virtd-04-task-03.4.png)
+![3.5](img/virtd-04-task-03.5.png)
+![3.6](img/virtd-04-task-03.6.png)
+
+---
+
 ## Задача 4
 
 ### Запуск контейнеров
 
 ```bash
-docker run -d -v $(pwd):/data --name centos-container centos tail -f /dev/null
-docker run -d -v $(pwd):/data --name debian-container debian tail -f /dev/null
+docker run -d -v $(pwd):/data --name centos-container centos:8 tail -f /dev/null
+docker run -d -v $(pwd):/data --name debian-container debian:latest tail -f /dev/null
 ```
 
 ### Создание файлов
@@ -179,15 +194,17 @@ docker exec debian-container ls -la /data
 docker exec debian-container cat /data/centos-file.txt
 ```
 
-![Скриншот выполнения команд](screenshots/task4.png)
+![4](img/virtd-04-task-04.png)
+
+---
 
 ## Задача 5
 
 ### Создание директории и файлов
 
 ```bash
-mkdir -p /tmp/netology/docker/task5
-cd /tmp/netology/docker/task5
+mkdir task5
+cd task5
 ```
 
 `compose.yaml`:
@@ -223,16 +240,14 @@ docker compose up -d
 
 ```yaml
 version: "3"
+include:
+  - docker-compose.yaml
 services:
   portainer:
     network_mode: host
     image: portainer/portainer-ce:latest
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-  registry:
-    image: registry:2
-    ports:
-      - "5000:5000"
 ```
 
 ### Загрузка образа в локальное registry
@@ -263,7 +278,7 @@ services:
 
 ### Скриншот конфигурации контейнера
 
-![Скриншот конфигурации](screenshots/task5_inspect.png)
+![5.6](img/virtd-04-task-05.6.png)
 
 ### Удаление манифеста и повторный запуск
 
@@ -272,7 +287,7 @@ rm compose.yaml
 docker compose up -d
 ```
 
-Получаем предупреждение о том, что используется только один файл композа. Docker предлагает использовать `docker-compose -f docker-compose.yaml up -d`.
+Получаем предупреждение о том, что используется только один файл композа. Docker предлагает использовать `docker compose up -d --remove-orphans`.
 
 ### Остановка проекта
 
@@ -280,4 +295,4 @@ docker compose up -d
 docker compose down
 ```
 
-![Скриншот выполнения команд](screenshots/task5.png)
+![5.7](img/virtd-04-task-05.7.png)
