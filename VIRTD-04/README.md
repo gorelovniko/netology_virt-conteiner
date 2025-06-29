@@ -61,8 +61,8 @@ docker build -t custom-nginx:1.0.0 .
 
 ```bash
 docker login
-docker tag custom-nginx:1.0.0 <username>/custom-nginx:1.0.0
-docker push <username>/custom-nginx:1.0.0
+docker tag custom-nginx:1.0.0 nikogorelov/custom-nginx:1.0.0
+docker push nikogorelov/custom-nginx:1.0.0
 ```
 
 Ссылка на репозиторий: [custom-nginx](https://hub.docker.com/repository/docker/nikogorelov/custom-nginx/general)
