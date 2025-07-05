@@ -1,7 +1,4 @@
-# Домашнее задание к занятию 5. «Практическое применение Docker» - `Горелов Николай`
-
-
-# Решение домашнего задания к занятию 5 "Практическое применение Docker"
+#  "Практическое применение Docker"
 
 ## Задача 0
 
@@ -11,11 +8,9 @@ docker-compose --version
 ```
 Получаем ожидаемую ошибку:
 ```
-Command 'docker-compose' not found, but can be installed with:
+bash: docker-compose: команда не найдена
 ...
 ```
-
-![task0.1]()
 
 2. Проверка наличия docker compose (без тире) версии не менее v2.24.X:
 ```bash
@@ -23,10 +18,12 @@ docker compose version
 ```
 Вывод:
 ```
-Docker Compose version v2.24.5
+Docker Compose version v2.37.3
 ```
 
-![task0.1]()
+![](img/0.1%20and%200.2.png)
+
+---
 
 ## Задача 1
 
