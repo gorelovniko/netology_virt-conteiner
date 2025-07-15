@@ -37,8 +37,7 @@ COPY . .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-# CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]
-CMD ["python", "main.py"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]
 ```
 
 2. Создан файл `.dockerignore`:
@@ -152,15 +151,23 @@ SELECT * from requests LIMIT 10;
 REPO_URL="https://github.com/gorelovniko/shvirtd-example-python"
 TARGET_DIR="/opt/app"
 
+MYSQL_ROOT_PASSWORD="YtReWq4321"
+
+MYSQL_DATABASE="virtd"
+MYSQL_USER="app"
+MYSQL_PASSWORD="QwErTy1234"
+
 # Install dependencies
 apt-get update
 apt-get install -y git docker.io
 
+# Install docker compose
 DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
 mkdir -p $DOCKER_CONFIG/cli-plugins
 curl -SL https://github.com/docker/compose/releases/download/v2.38.2/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
 chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
 
+# Add user in docker group
 REAL_USER=$(logname)
 usermod -aG docker $REAL_USER
 systemctl restart docker
@@ -190,11 +197,27 @@ docker compose up -d
 
 ## Задача 6
 
+[Install dive](https://github.com/wagoodman/dive)
+
+```bash
+DIVE_VERSION=$(curl -sL "https://api.github.com/repos/wagoodman/dive/releases/latest" | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+curl -fOL "https://github.com/wagoodman/dive/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.deb"
+sudo apt install ./dive_${DIVE_VERSION}_linux_amd64.deb
+```
+
+![](img/6.1.png)
+![](img/6.2.png)
+![](img/6.3.0.png.png)
+![](img/6.3.png)
+![](img/6.4.png)
+![](img/6.5.png)
+![](img/6.6.png)
 
 ---
 
 ## Задача 6.1
 
+![](img/6.1.1.png)
 
 ---
 
