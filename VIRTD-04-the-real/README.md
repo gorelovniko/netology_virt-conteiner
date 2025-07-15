@@ -1,4 +1,4 @@
-#  "Практическое применение Docker"
+#  "Практическое применение Docker" - `Горелов Николай`
 
 ## Задача 0
 
@@ -37,7 +37,8 @@ COPY . .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]
+# CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]
+CMD ["python", "main.py"]
 ```
 
 2. Создан файл `.dockerignore`:
@@ -58,32 +59,12 @@ docker build -t python-app -f Dockerfile.python .
 docker run -d -p 5000:5000 python-app
 ```
 
-## Задача 2 (*)
+---
 
-1. Создан Container Registry в Yandex Cloud:
-```bash
-yc container registry create --name test
-```
+ ## Задача 2 (*)
 
-2. Настроена аутентификация:
-```bash
-yc container registry configure-docker
-```
 
-3. Сборка и загрузка образа:
-```bash
-docker build -t cr.yandex/<registry_id>/test:1.0 -f Dockerfile.python .
-docker push cr.yandex/<registry_id>/test:1.0
-```
-
-4. Отчет сканирования (пример):
-```
-Vulnerability Scan Report:
-- Critical: 0
-- High: 2
-- Medium: 5
-- Low: 12
-```
+---
 
 ## Задача 3
 
@@ -151,27 +132,38 @@ docker exec -ti <container_id> mysql -uroot -p${MYSQL_ROOT_PASSWORD}
 SQL запросы:
 ```sql
 show databases;
-use example;
+use virtd;
 show tables;
 SELECT * from requests LIMIT 10;
 ```
 
-Скриншот выполнения SQL запросов приложен.
+![](img/3.1.png)
+![](img/3.2.png)
+
+---
 
 ## Задача 4
 
 1. Создана ВМ в Yandex Cloud
-2. Установлен Docker на ВМ
-3. Создан bash-скрипт `deploy.sh`:
+2. Создан bash-скрипт `deploy.sh`:
 ```bash
 #!/bin/bash
 
-REPO_URL="https://github.com/<your-username>/<repo-name>.git"
+REPO_URL="https://github.com/gorelovniko/shvirtd-example-python"
 TARGET_DIR="/opt/app"
 
 # Install dependencies
 apt-get update
-apt-get install -y git docker.io docker-compose
+apt-get install -y git docker.io
+
+DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+mkdir -p $DOCKER_CONFIG/cli-plugins
+curl -SL https://github.com/docker/compose/releases/download/v2.38.2/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
+chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+
+REAL_USER=$(logname)
+usermod -aG docker $REAL_USER
+systemctl restart docker
 
 # Clone repository
 git clone $REPO_URL $TARGET_DIR
@@ -181,87 +173,37 @@ cd $TARGET_DIR
 docker compose up -d
 ```
 
-4. Проверка работы через https://check-host.net/check-http
+3. Проверка работы через https://check-host.net/check-http
 
-Ссылка на fork репозитория: `https://github.com/<your-username>/<repo-name>`
+![](img/4.1.png)
+
+![](img/4.2.png)
+
+Ссылка на fork репозитория: `https://github.com/gorelovniko/shvirtd-example-python`
+
+---
 
 ## Задача 5 (*)
 
-1. Создан скрипт `backup.sh`:
-```bash
-#!/bin/bash
 
-BACKUP_DIR="/opt/backup"
-DB_USER=$(grep DB_USER .env | cut -d '=' -f2)
-DB_PASSWORD=$(grep DB_PASSWORD .env | cut -d '=' -f2)
-DB_NAME=$(grep DB_NAME .env | cut -d '=' -f2)
-
-mkdir -p $BACKUP_DIR
-
-docker run --rm --network backend \
-  -v $BACKUP_DIR:/backup \
-  schnitzler/mysqldump \
-  -h db -u $DB_USER -p$DB_PASSWORD $DB_NAME > $BACKUP_DIR/backup_$(date +%Y%m%d_%H%M%S).sql
-```
-
-2. Настроен cron:
-```bash
-(crontab -l 2>/dev/null; echo "* * * * * /opt/backup.sh") | crontab -
-```
-
-Скриншот с резервными копиями приложен.
+---
 
 ## Задача 6
 
-1. Извлечение terraform с помощью dive и docker save:
-```bash
-docker pull hashicorp/terraform:latest
-dive hashicorp/terraform:latest
-# В dive копируем путь /bin/terraform
-docker save hashicorp/terraform:latest > terraform.tar
-tar -xvf terraform.tar
-# Находим и извлекаем файл из слоев
-```
 
-2. С помощью docker cp:
-```bash
-docker create --name terraform-container hashicorp/terraform:latest
-docker cp terraform-container:/bin/terraform ./terraform
-docker rm terraform-container
-```
+---
 
-3. С помощью docker build:
-```dockerfile
-FROM hashicorp/terraform:latest as source
+## Задача 6.1
 
-FROM alpine
-COPY --from=source /bin/terraform /terraform
-```
-Затем:
-```bash
-docker build -t terraform-extractor .
-docker run --rm -v $(pwd):/out terraform-extractor cp /terraform /out
-```
 
-Скриншоты всех действий приложены.
+---
+
+## Задача 6.2 (**)
+
+
+---
 
 ## Задача 7 (***)
 
-1. Установка runC
-2. Создание rootfs:
-```bash
-mkdir -p mycontainer/rootfs
-docker export $(docker create python-app) | tar -xC mycontainer/rootfs
-```
 
-3. Создание config.json:
-```bash
-runc spec
-```
-
-4. Запуск контейнера:
-```bash
-runc run mypythonapp
-```
-
-Скриншоты всех действий приложены.
+---
